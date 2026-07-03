@@ -235,3 +235,18 @@ result. Full detail in `docs/DECISION_LOG.md` (AUD.5-AUD.10); summarised here:
 
 **Recommendation: GO.** Waiting for explicit push authorization before any remote operation — none will
 be attempted without it.
+
+---
+
+## 2026-07-04 — Post-audit correction: Python floor
+
+This audit (Phase C, above) stated the Python floor as **3.11+**, matching the repo's claim at the time
+of writing. That claim was subsequently tested empirically by CI (not assumed) and found false: all
+three Python 3.11 legs (ubuntu-latest, windows-latest, macos-latest) failed identically inside
+`pip install -r requirements.txt`, before `pytest` ever ran — `numpy==2.5.0 Requires-Python >=3.12`. The
+floor was corrected to **3.12+** in `README.md` and `CLAUDE.md`. Full evidence (raw log excerpts, job
+IDs, run link) is in the CI entry of `docs/DECISION_LOG.md`.
+
+Per this document's own audit convention, the original Phase C text above is left as written — it
+accurately records what the claim was at the time of that pass — rather than silently edited to match
+the correction.

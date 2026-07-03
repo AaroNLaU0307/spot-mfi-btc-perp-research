@@ -47,7 +47,8 @@ sibling repos and re-tested here:
 Read the source of anything vendored and confirm what it actually does; note any change and re-test.
 
 ## Stack & layout
-- Python 3.11+ (dev on 3.13), `.venv` per project; `pandas`/`numpy`/`scipy`/`statsmodels`/`matplotlib`,
+- Python 3.12+ (dev on 3.13; floor set by numpy==2.5.0, see the DECISION_LOG CI entry), `.venv` per
+  project; `pandas`/`numpy`/`scipy`/`statsmodels`/`matplotlib`,
   `ccxt` (spot ingestion), `requests` (Binance perp REST), `pytest`.
 - `config.py` (root, no magic numbers) · `src/` (package) · `run_*.py` (entry scripts at root) ·
   `tests/` · `data_cache/` (gitignored) · `output/` (figures + reports) · `research/` (pre-registration)
