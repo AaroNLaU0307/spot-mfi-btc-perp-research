@@ -1,5 +1,7 @@
 # Spot money-flow signals for BTCUSDT perpetuals — a falsification-first research program
 
+[![tests](https://github.com/AaroNLaU0307/spot-mfi-btc-perp-research/actions/workflows/tests.yml/badge.svg)](https://github.com/AaroNLaU0307/spot-mfi-btc-perp-research/actions/workflows/tests.yml)
+
 Two pre-registered studies test whether a spot Money Flow Index (MFI) signal, alone or combined with
 perp funding, predicts Binance USDⓈ-M BTCUSDT perpetual returns. Both were closed honestly: the base
 study is `FALSIFIED`, and its follow-up (Variant A) is `INCONCLUSIVE`, weight of evidence leaning
@@ -137,7 +139,8 @@ docs/               # DECISION_LOG.md, TEST_RATIONALE.md, AUDIT.md
 
 ## Run
 
-Requires **Python 3.11+** (developed and audited on 3.13). Dependencies are pinned in
+Requires **Python 3.12+** (developed and audited on 3.13; CI proved the pinned `numpy==2.5.0` has no
+Python 3.11 wheel — see `docs/DECISION_LOG.md`). Dependencies are pinned in
 [requirements.txt](requirements.txt); `ccxt` and `requests` are only needed to regenerate `data_cache/`
 from public endpoints — no API key is required for the proxy pipeline described above.
 
@@ -180,6 +183,9 @@ dependency.
 ```bash
 python -m pytest -q
 ```
+
+This suite runs in CI on every push to `main`, every pull request, and on manual dispatch, across
+Ubuntu/Windows/macOS × Python 3.12/3.13 (badge above).
 
 59 tests, no network access and no `data_cache/` required (they use small synthetic fixtures throughout)
 — runs in a few seconds. Covers: MFI correctness against hand-worked examples, no-lookahead/factor-lag

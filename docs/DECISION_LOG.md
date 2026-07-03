@@ -224,3 +224,42 @@ well under 500KB (19KB-141KB) — no re-save needed.
 **AUD.10 — Re-verification after all of the above:** 59/59 tests pass; `git commit --amend` performed
 with a fresh ASCII message file, keeping this a single clean root commit; local identity re-confirmed
 noreply post-amend. Still no remote, no push.
+
+---
+
+## 2026-07-04 — CI added; Python floor corrected from empirical evidence
+
+**CI.1 — Workflow added.** `.github/workflows/tests.yml`: `pip install -r requirements.txt` then
+`python -m pytest -q` (the exact README runbook) on push to `main`, on pull request, and on manual
+dispatch. Originally a 3×3 matrix (Ubuntu/Windows/macOS × Python 3.11/3.12/3.13, `fail-fast: false`).
+Committed and pushed first, watched to completion via the GitHub Actions API (no `gh` CLI in this
+environment; polled `.../actions/runs/{id}/jobs` every 30s), *before* any badge or README claim was
+touched — the badge must never point at an unverified workflow.
+
+**CI.2 — Result: 6/9 green, 3/9 failed identically at install, not at test.** All three Python 3.11 legs
+(ubuntu/macos/windows) failed inside `pip install -r requirements.txt`, before `pytest` ever ran:
+```
+ERROR: Could not find a version that satisfies the requirement numpy==2.5.0 (from versions: ...2.4.6)
+ERROR: Ignored the following versions that require a different python version: ...
+  2.5.0 Requires-Python >=3.12; 2.5.0rc1 Requires-Python >=3.12
+ERROR: No matching distribution found for numpy==2.5.0
+```
+Identical error, identical exit code 1, on all three OSes — confirmed by fetching each job's raw log
+(run 28671168827, jobs 85034544445/85034544459/85034544463). All three Python 3.12 and all three
+Python 3.13 legs passed cleanly (59/59 tests each). This is the exact scenario the brief anticipated:
+the pinned `numpy==2.5.0` has no wheel for Python 3.11 (`Requires-Python >=3.12`) — an install-time
+dependency-floor fact, not a code or test bug, and not a partial/platform-specific failure (it reproduced
+identically on Ubuntu, Windows, and macOS).
+
+**CI.3 — Correction applied per the pre-agreed rule: the claim bends to reality, the pins do not.**
+`requirements.txt`, `src/`, and `tests/` were **not** touched — the pinned versions remain exactly the
+audited state. Instead: (a) `.github/workflows/tests.yml` matrix trimmed to Python 3.12/3.13 (3.11
+removed, now 6 legs); (b) README's "Requires Python 3.11+" corrected to "Requires Python 3.12+", with a
+one-line pointer to this entry as the evidence; (c) this entry. Known, deliberately out of scope for this
+change (not on the permitted-files list): `CLAUDE.md` and `docs/AUDIT.md` both still say "3.11+" from the
+original audit and are now stale relative to this correction — flagged for a future pass, not silently
+left inconsistent.
+
+**CI.4 — Badge added** under the README H1, pointing at the `tests.yml` workflow badge SVG, plus one
+sentence in the Tests section stating the CI matrix. Badge commit's own run watched to completion before
+declaring done, since the badge reflects the latest `main` run, not the commit that added it.
