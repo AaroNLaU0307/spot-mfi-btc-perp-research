@@ -1,0 +1,25 @@
+# Environment
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.env
+.env.*
+
+# Caches
+.pytest_cache/
+.mypy_cache/
+.ipynb_checkpoints/
+
+# Raw / intermediate data — reproducible from the loaders, can be large.
+# Never commit; ship the loader + schema only.
+data_cache/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
