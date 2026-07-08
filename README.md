@@ -203,3 +203,14 @@ to this proxy. Extend the sample to include a bear-market-inclusive or cross-ass
 BTC-uptrend confound both studies ran into. If the drawdown-avoidance property in Variant A is worth
 anything, it would need to be reframed and benchmarked explicitly as a risk overlay against vol-targeting
 — not tested again as a standalone signal.
+
+## Related research
+
+Part of a falsification-first research series applying the same protocol across asset classes
+and strategy families:
+
+- [`multi-asset-tsmom-research`](https://github.com/AaroNLaU0307/multi-asset-tsmom-research) - time-series momentum across asset classes, **confirmed** (net Sharpe 0.75, 95% bootstrap CI [0.29, 1.23] excludes zero); XSMOM and four overlay studies falsified under the same gates.
+- [`quant-backtest-framework`](https://github.com/AaroNLaU0307/quant-backtest-framework) - multi-instrument SMC price-action study, **falsified** (0/210 cross-instrument BH-FDR across 5 instruments x 42 configs).
+- [`orderflow-research-engine`](https://github.com/AaroNLaU0307/orderflow-research-engine) - order-flow footprint signals on BTC/ETH perps, **falsified/null** (0/20 cells survive BH-FDR; 18-month OOS never opened).
+
+The series' base rate is the point: confirmations are earned against the same gates that falsify everything else.
