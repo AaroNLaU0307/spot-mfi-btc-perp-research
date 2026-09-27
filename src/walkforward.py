@@ -77,7 +77,8 @@ def plateau_metric(mat: pd.DataFrame) -> dict:
     same_sign = nb[np.sign(nb) == np.sign(peak)]
     ratio = float(np.mean(nb) / peak) if peak != 0 else float("nan")
     same_sign_frac = float(len(same_sign) / len(nb)) if len(nb) else 0.0
-    is_plateau = bool(peak > 0 and ratio >= config.PLATEAU_MIN_FRACTION and same_sign_frac >= 0.8)
+    is_plateau = bool(peak > 0 and ratio >= config.PLATEAU_MIN_FRACTION
+                      and same_sign_frac >= config.PLATEAU_MIN_SAME_SIGN_FRAC)
     return {"is_plateau": is_plateau, "peak_sharpe": float(peak),
             "peak_params": (_native(mat.index[i]), _native(mat.columns[j])),
             "nbhd_mean": float(np.mean(nb)), "nbhd_mean_to_peak": ratio,

@@ -1,4 +1,7 @@
-"""Variant A · Phase 6 — cost sensitivity + breakeven for the best Edge config.
+"""Variant A · Phase 6 — cost sensitivity + breakeven for the full-sample best Edge config.
+
+Phase 6 produces the last input of the registered decision rule, so this script finishes by
+re-rendering the gate table in output/REPORT_variantA.md from the phase-4/5/6 reports (src/gates.py).
 
 Run: .venv\\Scripts\\python run_A6_costs.py
 """
@@ -20,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 import config
-from src import backtest, divergence as dv, performance as perf
+from src import backtest, divergence as dv, gates, performance as perf
 
 
 def main() -> None:
@@ -58,7 +61,7 @@ def main() -> None:
 
     L = []; W = L.append
     W("# Variant A · Phase 6 — cost sensitivity & breakeven\n")
-    W(f"Best in-sample config **T={T}, W={Wn}**. Funding always applied.\n")
+    W(f"Best full-sample config **T={T}, W={Wn}**. Funding always applied.\n")
     W("| one-way cost (bps) | net Sharpe |")
     W("|---:|---:|")
     for c, s in zip(cost_bps, sharpes):
@@ -70,6 +73,7 @@ def main() -> None:
     W(f"\n**Reading:** as in the base study, turnover is low (~{activity['turnover_per_year']:.0f}/yr) → not fee-sensitive. Funding is the drag, but "
       "the binding constraint is significance/persistence (Phase 5), not cost.\n")
     (config.OUTPUT_DIR / "variantA_phase6.md").write_text("\n".join(L), encoding="utf-8")
+    gate_table = gates.update_report("variantA")
 
     print("VARIANT A PHASE 6 OK")
     print(f"  best T={T},W={Wn} gross={gross_sharpe:.3f} BH_spot={bh_spot:.3f}")
@@ -77,6 +81,7 @@ def main() -> None:
           f"turnover_per_year={activity['turnover_per_year']:.1f} exposure={activity['exposure']*100:.0f}%")
     print(f"  net Sharpe by bps {cost_bps}: {np.round(sharpes,3).tolist()}")
     print(f"  breakeven one-way = {'%.0f bps' % breakeven if np.isfinite(breakeven) else '>100 bps'}")
+    print(f"  output/REPORT_variantA.md gate table: {gate_table.splitlines()[-3]}")
 
 
 if __name__ == "__main__":

@@ -37,6 +37,7 @@ import pandas as pd
 import config
 from src import pbo as pbo_mod
 from src import performance as perf
+from src import signals
 
 S_PRIMARY = 16
 S_SENSITIVITY = (8, 12, 16)
@@ -155,11 +156,23 @@ def _append_or_replace(report_path: Path, section_md: str) -> None:
     report_path.write_text(text + section_md + "\n", encoding="utf-8")
 
 
+def _grid_size(model: str) -> int:
+    g1, g2 = signals.MODELS[model]["grid"]
+    return len(g1) * len(g2)
+
+
+# Every grid evaluated in the program, counted from the grids themselves (src/signals.py MODELS).
+N_BASE_M1, N_BASE_M2, N_VARIANT_A = (_grid_size(m) for m in ("M1_level", "M2_zscore", "M1_edge"))
+N_CONFIGS_TOTAL = N_BASE_M1 + N_BASE_M2 + N_VARIANT_A
+
 MULTIPLICITY_NOTE = (
     "## Program-level multiplicity\n\n"
     "The two studies form one research family: 2 pre-registered hypotheses, "
-    "42 (base) + 36 (Variant A) = **78 grid configurations tested in total**. Neither study's "
-    "within-study BH-FDR/DSR correction accounts for this program-level breadth. A family-wise "
+    f"{N_BASE_M1} (base M1) + {N_BASE_M2} (base M2 robustness) + {N_VARIANT_A} (Variant A) = "
+    f"**{N_CONFIGS_TOTAL} grid configurations tested in total**, each evaluated over the full sample "
+    "and walk-forwarded. The within-study BH-FDR/DSR families cover only the primary grids "
+    f"({N_BASE_M1} and {N_VARIANT_A}); the {N_BASE_M2} M2 configs are in neither, and no correction "
+    "accounts for the program-level breadth. A family-wise "
     "correction spanning both hypotheses would only raise the significance bar further — since both "
     "verdicts are already negative (`FALSIFIED` / `INCONCLUSIVE` leaning `FALSIFIED`) under their own "
     "within-study corrections, a program-level correction cannot change either verdict; it can only "

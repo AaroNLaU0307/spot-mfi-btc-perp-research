@@ -1,8 +1,10 @@
 """Phase 5 — statistical validation of the pre-registered M1 result.
 
 Consumes Phase-4 artifacts and runs:
-  * DSR / PSR on the in-sample best config (deflated for N=grid trials) — is the IS peak real?
-  * BH-FDR across the grid (per-config PSR-based p) — selection control.
+  * DSR / PSR on the full-sample best config (deflated for N=grid trials) — is the peak real? The grid
+    is scored over the whole sample, which contains the walk-forward OOS span, so these are
+    full-sample (not in-sample) statistics.
+  * BH-FDR across the grid (per-config PSR-based p, full-sample returns) — selection control.
   * Stationary block-bootstrap CI on the aggregated OOS Sharpe — does it exclude 0?
   * Factor-permutation null on the OOS signal→return mapping — does OOS beat luck?
 
@@ -32,7 +34,7 @@ def main() -> None:
     oos_net, oos_pos, oos_mkt = oos["net"].dropna(), oos["pos"], oos["market"]
     n_configs = len(grid)
 
-    # ---- (1) DSR/PSR on the IS best config ---- #
+    # ---- (1) DSR/PSR on the full-sample best config ---- #
     best = grid.loc[grid["sharpe"].idxmax()]
     sr_pp, n_days = float(best["sr_pp"]), int(best["n_days"])
     skew, kurt = float(best["skew"]), float(best["kurt"])
@@ -43,7 +45,7 @@ def main() -> None:
     # ---- (2) BH-FDR across the grid (PSR-based one-sided p for Sharpe>0) ---- #
     pvals = [1.0 - stats.probabilistic_sharpe_ratio(r.sr_pp, int(r.n_days), r.skew, r.kurt, 0.0)
              if np.isfinite(r.sr_pp) else 1.0 for r in grid.itertuples()]
-    bh = stats.benjamini_hochberg(pvals, alpha=0.05)
+    bh = stats.benjamini_hochberg(pvals, alpha=config.EDGE_FDR_ALPHA)
     n_survive = int(bh["reject"].sum())
 
     # ---- (3) stationary block-bootstrap CI on OOS Sharpe ---- #
@@ -56,6 +58,8 @@ def main() -> None:
     osr, on, oskew, okurt = stats.sharpe_moments(oos_net)
     psr_oos = stats.probabilistic_sharpe_ratio(osr, on, oskew, okurt, 0.0)
     oos_sharpe_ann = perf.sharpe_ratio(oos_net)
+    dsr_min = 1.0 - config.EDGE_MAX_DSR_P
+    perm_max = config.EDGE_MAX_PERMUTATION_P
 
     # ---- report ---- #
     L = []
@@ -63,26 +67,30 @@ def main() -> None:
     W("# Phase 5 — Statistical validation\n")
     W(f"N configs tested (M1 grid): **{n_configs}**. Block length (a-priori, IC-decay anchored): "
       f"**{config.STATIONARY_BLOCK_MEAN}** days.\n")
-    W("## In-sample selection significance (DSR/PSR)\n")
-    W(f"- Best IS config {tuple(grid.loc[grid['sharpe'].idxmax(), ['threshold', 'window']].astype(int))}: "
+    W("## Full-sample selection significance (DSR/PSR)\n")
+    W("The grid is scored over the whole sample, which contains the walk-forward OOS span: these are "
+      "full-sample statistics, not in-sample ones.\n")
+    W(f"- Best full-sample config {tuple(grid.loc[grid['sharpe'].idxmax(), ['threshold', 'window']].astype(int))}: "
       f"per-period SR={sr_pp:.4f} (ann {sr_pp*np.sqrt(config.PERIODS_PER_YEAR):.2f}), n={n_days}")
     W(f"- PSR vs 0 = **{psr_is:.3f}**")
     W(f"- **DSR (deflated for N={n_configs} trials) = {dsr_is:.3f}**  "
-      f"(need > 0.95 for CONFIRMED; {'PASS' if dsr_is > 0.95 else 'FAIL'})\n")
-    W("## Multiple-testing across the grid (BH-FDR)\n")
-    W(f"- Configs surviving BH-FDR at α=0.05: **{n_survive}/{n_configs}** "
+      f"(need > {dsr_min:.2f} for CONFIRMED; {'PASS' if dsr_is > dsr_min else 'FAIL'})\n")
+    W("## Multiple-testing across the grid (BH-FDR, full-sample)\n")
+    W(f"- Configs surviving BH-FDR at α={config.EDGE_FDR_ALPHA}: **{n_survive}/{n_configs}** "
       f"(note: long-biased-in-a-bull inflates raw Sharpe>0 p-values; interpret with the benchmark test)\n")
     W("## Out-of-sample honesty (the verdict inputs)\n")
     W(f"- Aggregated OOS Sharpe (ann) = **{oos_sharpe_ann:.3f}**  ·  PSR vs 0 = {psr_oos:.3f}")
     W(f"- Stationary block-bootstrap 95% CI for OOS Sharpe: **[{boot['lo']:.3f}, {boot['hi']:.3f}]**  "
       f"(frac>0 {boot['frac_gt_0']:.2f}) → **{'excludes 0' if boot['lo'] > 0 else 'INCLUDES 0'}**")
     W(f"- Permutation null: observed OOS Sharpe {perm['observed']:.3f} vs null p95 {perm['null_p95']:.3f}; "
-      f"**p = {perm['p_value']:.3f}** ({'significant' if perm['p_value'] < 0.05 else 'NOT significant'})\n")
+      f"**p = {perm['p_value']:.3f}** ({'significant' if perm['p_value'] < perm_max else 'NOT significant'}; "
+      f"gross returns)\n")
 
     (config.OUTPUT_DIR / "phase5_validation.md").write_text("\n".join(L), encoding="utf-8")
 
     print("PHASE 5 OK")
-    print(f"  IS best PSR={psr_is:.3f} DSR(N={n_configs})={dsr_is:.3f} {'PASS' if dsr_is>0.95 else 'FAIL'}")
+    print(f"  full-sample best PSR={psr_is:.3f} DSR(N={n_configs})={dsr_is:.3f} "
+          f"{'PASS' if dsr_is > dsr_min else 'FAIL'}")
     print(f"  BH-FDR survivors: {n_survive}/{n_configs}")
     print(f"  OOS Sharpe={oos_sharpe_ann:.3f} PSR={psr_oos:.3f}")
     print(f"  OOS block-bootstrap 95% CI=[{boot['lo']:.3f},{boot['hi']:.3f}] frac>0={boot['frac_gt_0']:.2f} "

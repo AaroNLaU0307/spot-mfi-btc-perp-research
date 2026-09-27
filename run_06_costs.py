@@ -1,8 +1,11 @@
 """Phase 6 — cost sensitivity + breakeven cost ceiling.
 
-Cost-sensitivity is shown on the in-sample best config (clean monotone curve): net Sharpe vs assumed
+Cost-sensitivity is shown on the full-sample best config (clean monotone curve): net Sharpe vs assumed
 one-way trading cost (bps), with real funding always applied. Breakeven = cost at which net Sharpe → 0.
 The honest OOS headline (already sub-benchmark at realistic cost) is reported alongside.
+
+Phase 6 produces the last input of the registered decision rule, so this script finishes by
+re-rendering the gate table in output/REPORT.md from the phase-4/5/6 reports (src/gates.py).
 
 Run: .venv\\Scripts\\python run_06_costs.py
 """
@@ -24,7 +27,7 @@ import numpy as np
 import pandas as pd
 
 import config
-from src import backtest, performance as perf, signals
+from src import backtest, gates, performance as perf, signals
 
 
 def main() -> None:
@@ -75,7 +78,7 @@ def main() -> None:
     L = []
     W = L.append
     W("# Phase 6 — Cost sensitivity & breakeven\n")
-    W(f"Best in-sample config: **T={T}, W={Wn}**. Funding always applied (mean ≈ +12.5%/yr paid by longs).\n")
+    W(f"Best full-sample config: **T={T}, W={Wn}**. Funding always applied (mean ≈ +12.5%/yr paid by longs).\n")
     W("| one-way cost (bps) | net Sharpe | net ann % |")
     W("|---:|---:|---:|")
     for c, s, a in zip(cost_bps, sharpes, anns):
@@ -91,6 +94,7 @@ def main() -> None:
       "of out-of-sample persistence** (Phase 4–5): the strategy never beats buy-and-hold spot even gross, "
       "and its OOS Sharpe is statistically indistinguishable from zero.\n")
     (config.OUTPUT_DIR / "phase6_costs.md").write_text("\n".join(L), encoding="utf-8")
+    gate_table = gates.update_report("base")
 
     print("PHASE 6 OK")
     print(f"  best config T={T},W={Wn}")
@@ -101,6 +105,7 @@ def main() -> None:
     print(f"  net Sharpe by cost bps {cost_bps}:")
     print("   ", np.round(sharpes, 3).tolist())
     print(f"  breakeven one-way cost = {'%.0f bps' % breakeven if np.isfinite(breakeven) else '>100 bps'}")
+    print(f"  output/REPORT.md gate table: {gate_table.splitlines()[-3]}")
 
 
 if __name__ == "__main__":

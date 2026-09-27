@@ -142,6 +142,7 @@ GRID_Z_WINDOWS = (20, 30, 45, 60, 90, 120, 180)
 # Plateau test: 3x3 (+/-1 step per dim) neighbourhood must retain this fraction of
 # the peak Sharpe WITH THE SAME SIGN, else the peak is rejected as an isolated spike.
 PLATEAU_MIN_FRACTION = 0.80
+PLATEAU_MIN_SAME_SIGN_FRAC = 0.8   # share of neighbourhood cells that must share the peak's sign
 
 # --------------------------------------------------------------------------- #
 # Variant A — spot-MFI vs funding DIVERGENCE (closes the spot-perp premise).
@@ -176,11 +177,14 @@ CI_LEVEL = 95                    # %
 STATIONARY_BLOCK_MEAN = 21   # anchored a-priori to the ~21d IC-decay / avg-holding horizon
 
 # --------------------------------------------------------------------------- #
-# Decision rule (verdict). Pre-registered numeric bar — frozen in
-# research/PREREGISTRATION.md before any optimisation. Placeholders here are the
-# DEFAULTS the pre-registration will adopt/refine; the verdict cites these.
+# Decision rule (verdict). The numeric thresholds of the gates registered in
+# research/PREREGISTRATION.md and research/PREREGISTRATION_variantA.md ("Decision rule").
+# src/gates.py reads them to score each study and render the gate tables in output/REPORT*.md;
+# run_05_validate.py / run_A5_validate.py use them for their PASS/FAIL annotations.
 # --------------------------------------------------------------------------- #
 EDGE_MIN_NET_SHARPE = 0.5        # net (annualised) OOS Sharpe floor
 EDGE_MAX_DSR_P = 0.05            # DSR significance: require DSR > 0.95 (p < 0.05)
+EDGE_FDR_ALPHA = 0.05            # BH-FDR level across the grid; >= 1 survivor required
+EDGE_MAX_PERMUTATION_P = 0.05    # factor-permutation null: require p < 0.05
 EDGE_REQUIRE_PLATEAU = True      # selected params must sit on a plateau, not a spike
-EDGE_REQUIRE_OOS_POSITIVE = True # aggregated walk-forward OOS must be positive
+EDGE_REQUIRE_OOS_POSITIVE = True # aggregated walk-forward OOS must be positive (base gate 6)
