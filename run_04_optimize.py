@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 import config
-from src import performance as perf, signals, walkforward as wf
+from src import gates, performance as perf, signals, walkforward as wf
 
 
 def _reconstruct_oos_paths(panel, model, splits):
@@ -96,7 +96,7 @@ def main() -> None:
     ax.plot(oos_idx, (1 + wfr.oos_returns).cumprod(), color="#c02", lw=1.3,
             label=f"WF OOS strategy (Sharpe {wfr.oos_sharpe:.2f})")
     ax.plot(oos_idx, (1 + oo_market.fillna(0)).cumprod(), color="#888", lw=1.0,
-            label=f"BH spot (Sharpe {bh_spot_oos:.2f})")
+            label=f"B&H perp price ex-funding (Sharpe {bh_spot_oos:.2f})")
     ax.plot(oos_idx, (1 + (oo_market - panel['funding'].reindex(oos_idx)).fillna(0)).cumprod(),
             color="#06c", lw=1.0, ls="--", label=f"BH perp net (Sharpe {bh_perp_oos:.2f})")
     ax.set_yscale("log"); ax.set_ylabel("growth of $1 (log)"); ax.legend(fontsize=8)
@@ -129,15 +129,13 @@ def main() -> None:
     Wl(f"\n**Aggregated OOS:** net Sharpe **{wfr.oos_sharpe:.3f}** · ann_ret {om.get('ann_return', float('nan'))*100:.1f}% · "
        f"maxDD {om.get('max_drawdown', float('nan'))*100:.1f}% · win {om.get('win_rate', float('nan'))*100:.0f}% · "
        f"profit_factor {om.get('profit_factor', float('nan')):.2f}")
-    Wl(f"- Benchmark over same OOS span: **BH spot Sharpe {bh_spot_oos:.3f}**, BH perp net Sharpe {bh_perp_oos:.3f}")
-    beat = wfr.oos_sharpe > bh_spot_oos
-    Wl(f"- Beats buy-and-hold (spot)? **{'YES' if beat else 'NO'}**  "
-       f"(pre-registered requirement for CONFIRMED)\n")
+    Wl(gates.benchmark_line("base", wfr.oos_sharpe, bh_spot_oos, bh_perp_oos) + "\n")
 
     Wl("## M2 robustness (z-score band)\n")
     Wl(f"- Peak full-sample Sharpe **{df2['sharpe'].max():.3f}** at {best2}; "
        f"plateau {'PASS' if plat2['is_plateau'] else 'FAIL'} (nbhd/peak {plat2.get('nbhd_mean_to_peak', float('nan')):.2f})")
-    Wl(f"- WF OOS Sharpe **{wfr2.oos_sharpe:.3f}** (vs BH spot {bh_spot_oos:.3f})\n")
+    Wl(f"- WF OOS Sharpe **{wfr2.oos_sharpe:.3f}** (vs B&H perp price ex-funding {bh_spot_oos:.3f}, "
+       f"B&H perp net of funding {bh_perp_oos:.3f}); sensitivity only, not put through the Phase-5 tests\n")
 
     Wl("## Artifacts for Phase 5\n")
     Wl("- `data_cache/grid_M1.parquet` (N-config metrics incl per-period Sharpe moments → DSR/BH-FDR)")

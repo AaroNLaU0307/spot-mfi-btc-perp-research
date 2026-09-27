@@ -93,6 +93,19 @@ def test_phase6_reports_label_full_sample_and_rerender_the_gate_table(sandbox, s
     assert gates.gate_table_for(study, sandbox) in rendered
 
 
+@pytest.mark.parametrize("script, study", [("run_04_optimize", "base"), ("run_A4_optimize", "variantA")])
+def test_phase4_reports_both_benchmarks_and_score_the_registered_one(sandbox, script, study):
+    _run(script)
+    text = (sandbox / gates.STUDIES[study]["phase4"]).read_text(encoding="utf-8")
+    assert "BH spot" not in text
+    registered = gates.BENCHMARK_LABELS[gates.STUDIES[study]["benchmark"]]
+    assert f"Beats the registered benchmark ({registered})?" in text
+    m = gates._PATTERNS["benchmark"].search(text)            # the gate parser reads the new format
+    assert m is not None and m.group(1) != m.group(2)
+    if study == "base":
+        assert "not put through the Phase-5 tests" in text   # M2 is sensitivity only
+
+
 def test_multiplicity_note_counts_every_evaluated_grid():
     """42 base M1 + 49 base M2 + 36 Variant A configs were all evaluated and walk-forwarded."""
     b2 = importlib.import_module("run_B2_pbo")

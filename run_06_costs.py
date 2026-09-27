@@ -68,7 +68,8 @@ def main() -> None:
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.plot(cost_bps, sharpes, marker="o", color="#c02", label=f"best config (T={T},W={Wn}) net Sharpe")
     ax.axhline(0, color="k", lw=0.7)
-    ax.axhline(bh_spot, color="#888", ls="--", lw=0.9, label=f"buy-and-hold spot Sharpe ({bh_spot:.2f})")
+    ax.axhline(bh_spot, color="#888", ls="--", lw=0.9,
+               label=f"B&H perp price ex-funding Sharpe ({bh_spot:.2f})")
     ax.axhline(gross_sharpe, color="#093", ls=":", lw=0.9, label=f"gross (no fees/funding) Sharpe ({gross_sharpe:.2f})")
     ax.set_xlabel("assumed one-way cost (bps)"); ax.set_ylabel("net Sharpe (full sample)")
     ax.set_title("Phase 6 — cost sensitivity + breakeven (funding always applied)")
@@ -84,15 +85,15 @@ def main() -> None:
     for c, s, a in zip(cost_bps, sharpes, anns):
         W(f"| {c} | {s:.3f} | {a*100:.1f} |")
     W(f"\n- **Gross Sharpe (no fees, no funding): {gross_sharpe:.3f}** — raw signal-timing value before any cost.")
-    W(f"- Buy-and-hold spot Sharpe (full sample): **{bh_spot:.3f}**.")
+    W(f"- Buy-and-hold perp price ex-funding Sharpe (full sample): **{bh_spot:.3f}**.")
     W(f"- Activity at real costs: **{activity['n_trades']} trades**, avg hold **{activity['avg_hold_days']:.1f} days**, "
       f"turnover **{activity['turnover_per_year']:.1f}/yr**, exposure **{activity['exposure']*100:.0f}%** of days.")
     W(f"- **Breakeven one-way cost (net Sharpe → 0): "
       f"{'%.0f bps' % breakeven if np.isfinite(breakeven) else '> 100 bps (fees are not the binding constraint)'}**.")
     W(f"\n**Reading:** turnover is low (~{activity['turnover_per_year']:.0f}/yr), so the strategy is **not** fee-sensitive — the breakeven "
       "fee ceiling is high. The binding constraints are the **funding drag** and, decisively, the **lack "
-      "of out-of-sample persistence** (Phase 4–5): the strategy never beats buy-and-hold spot even gross, "
-      "and its OOS Sharpe is statistically indistinguishable from zero.\n")
+      "of out-of-sample persistence** (Phase 4–5): its OOS Sharpe is statistically indistinguishable "
+      "from zero.\n")
     (config.OUTPUT_DIR / "phase6_costs.md").write_text("\n".join(L), encoding="utf-8")
     gate_table = gates.update_report("base")
 

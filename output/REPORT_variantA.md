@@ -2,7 +2,9 @@
 
 **Verdict: `INCONCLUSIVE`, weight of evidence leaning `FALSIFIED`. No tradeable divergence edge
 established; no capital allocation warranted.** The Edge signal's walk-forward OOS Sharpe (0.68)
-*superficially* beat buy-and-hold spot (0.46) and sat on a plateau, but it **fails both out-of-sample
+*superficially* beat buy-and-hold (0.46; the registered "spot" benchmark, which the engine computes as
+the perp's price return without funding) on the base study's walk-forward windows, which had already
+been seen, and sat on a plateau, but it **fails both out-of-sample
 significance gates**, the Phase-1 honest IC was **~0 (funding adds no predictive information)**, and the
 outperformance is **2022-crash-avoidance (beta/drawdown timing) that reversed to negative in 2024–25** —
 not persistent alpha. This closes the spot–perp divergence thesis left open by the base study.
@@ -36,7 +38,10 @@ not persistent alpha. This closes the spot–perp divergence thesis left open by
   0.88). Like the base study's grid, it is scored over the whole sample, which contains the entire
   walk-forward OOS span; it is a full-sample statistic, not an in-sample one.
 - Embargoed walk-forward (embargo 14): **aggregated OOS Sharpe 0.684**, ann +14.9%, maxDD −26% — and it
-  **beats BH-spot (0.457)**. On its face, the strongest result in the whole program.
+  **beats buy-and-hold** (perp price ex-funding 0.457; perp net of funding 0.313). On its face a strong
+  result, though not the only OOS winner: the base study's M2 robustness model reached 0.717 OOS
+  ([phase4_optimize.md](phase4_optimize.md)) and was never significance-tested. The five OOS windows
+  are the base study's (same split dates).
 - **But the OOS is not persistent — Sharpe by year: 2021 +0.89 · 2022 +1.41 · 2023 +1.99 · 2024 −0.99 ·
   2025 −0.32.** The equity curve (`variantA_oos_equity.png`) shows *all* the outperformance was built by
   **sitting flat through the 2022 crash**; from 2024 it stagnates while spot rallies to close the gap.
@@ -70,7 +75,8 @@ The two out-of-sample significance gates fail. The DSR/BH-FDR passes are full-sa
 p=0.10, CI includes 0).
 
 ## 5. Phase 6 — costs — [variantA_phase6.md](variantA_phase6.md)
-Turnover low → not fee-sensitive (breakeven >100 bps one-way). Gross Sharpe 1.18 vs BH-spot 0.99.
+Turnover low → not fee-sensitive (breakeven >100 bps one-way). Full-sample gross Sharpe 1.18 vs
+buy-and-hold (perp price ex-funding) 0.99.
 Binding constraint is significance/persistence, not cost.
 
 ## 6. Verdict — `INCONCLUSIVE`, leaning `FALSIFIED`
@@ -84,15 +90,32 @@ independent facts push the honest reading to **FALSIFIED**:
 3. **Mechanism is not alpha** — the outperformance is 2022 drawdown-avoidance (a long-only defensive
    overlay dodging one crash), fully consistent with a zero rank-IC.
 
-**Bottom line: the spot-MFI-vs-funding divergence is not a tradeable edge.** The one benchmark-beating
-number in the program is an artifact of a single crash-avoidance episode, not repeatable signal.
+**Bottom line: the spot-MFI-vs-funding divergence is not a tradeable edge.** Its benchmark-beating OOS
+number is an artifact of a single crash-avoidance episode, not repeatable signal.
 
 ### Why this is a *stronger* negative than the base study
-The base study failed cleanly on every OOS metric. Variant A is more instructive: it shows how a
+The base study failed its out-of-sample Sharpe, benchmark and significance gates outright. Variant A is
+more instructive: it shows how a
 long-only defensive posture in a bull market can *manufacture* a benchmark-beating full-sample+early-OOS
 Sharpe that **survives plateau and full-sample DSR yet dies under block-bootstrap, permutation, and
 out-of-sample persistence checks.** That is the exact failure mode the falsification battery is built to
 expose — a portfolio-worthy demonstration.
+
+### Limitations
+- **Out-of-sample windows reused.** Variant A was designed after the base study's OOS results were known
+  (the base report's next steps proposed the funding divergence) and was scored on the same five
+  walk-forward OOS windows. Its OOS 0.684 is a second look at an already-seen path, including the 2022
+  crash that drives it.
+- **The specification saw the OOS period.** The Phase-1 IC that set the direction (`run_A1_eda.py`) was
+  computed on the full sample, which contains the whole walk-forward OOS span; the grid statistics
+  (plateau, DSR, BH-FDR) are full-sample too. These biases favour the hypothesis.
+- **Registered robustness checks not run:** the M2 z-score form `z_MFI − z_Fund`, the M3 2-D
+  conditional form and the long-short form.
+- **The permutation null runs on gross returns** (observed 0.768 vs the net 0.684); the calendar-year
+  stability read (`run_A5_validate.py`) is a diagnostic added after the Phase-4 result, not a
+  registered gate.
+
+Details and sources: [research/ERRATUM_2026-09-27.md](../research/ERRATUM_2026-09-27.md).
 
 ## 7. Next steps (if revisited)
 1. Re-run on the **real Glassnode `spot_money_flow_index`** (both studies).

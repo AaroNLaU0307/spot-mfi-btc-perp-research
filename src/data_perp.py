@@ -8,6 +8,9 @@ Endpoints (fapi.binance.com):
   * /fapi/v1/klines      interval=1d  -> [openTime, o, h, l, c, vol, closeTime, quoteVol, ...]
   * /fapi/v1/fundingRate -> [{fundingTime(ms), fundingRate(str), markPrice}], every 8h.
 All timestamps UTC; daily bars at 00:00 UTC start-of-period.
+
+Every download is recorded in ``data_cache/MANIFEST.json`` and every cached read is verified against
+it (``src/snapshot.py``).
 """
 from __future__ import annotations
 
@@ -17,6 +20,8 @@ import pandas as pd
 import requests
 
 import config
+
+from . import snapshot
 
 MS_DAY = 86_400_000
 _SESSION = requests.Session()
@@ -57,6 +62,7 @@ def fetch_perp_klines(*, force: bool = False) -> pd.DataFrame:
     """Daily perp OHLCV over [WARMUP_START, END_DATE]; cached. Naive-UTC day index."""
     cache = config.DATA_CACHE / "perp_klines.parquet"
     if cache.exists() and not force:
+        snapshot.verify(cache)
         return pd.read_parquet(cache)
 
     start, end = _ms(config.WARMUP_START), _ms(config.END_DATE) + MS_DAY - 1
@@ -85,6 +91,7 @@ def fetch_perp_klines(*, force: bool = False) -> pd.DataFrame:
             .loc[config.WARMUP_START:config.END_DATE].astype(float))
     config.DATA_CACHE.mkdir(parents=True, exist_ok=True)
     df.to_parquet(cache)
+    snapshot.record_pull(cache)
     return df
 
 
@@ -92,6 +99,7 @@ def fetch_funding(*, force: bool = False) -> pd.DataFrame:
     """8h funding-rate history over [WARMUP_START, END_DATE]; cached. Index = funding time (UTC)."""
     cache = config.DATA_CACHE / "perp_funding.parquet"
     if cache.exists() and not force:
+        snapshot.verify(cache)
         return pd.read_parquet(cache)
 
     start, end = _ms(config.WARMUP_START), _ms(config.END_DATE) + MS_DAY - 1
@@ -119,6 +127,7 @@ def fetch_funding(*, force: bool = False) -> pd.DataFrame:
             .loc[config.WARMUP_START:config.END_DATE][["funding_rate"]])
     config.DATA_CACHE.mkdir(parents=True, exist_ok=True)
     df.to_parquet(cache)
+    snapshot.record_pull(cache)
     return df
 
 

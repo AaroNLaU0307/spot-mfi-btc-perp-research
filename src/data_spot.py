@@ -4,7 +4,10 @@ Pulls daily OHLCV from each venue in ``config.SPOT_VENUES`` over [WARMUP_START, 
 caches one parquet per venue, and reports per-venue/per-year coverage.
 
 Disclosure: the resulting MFI is a SELF-COMPUTED cross-exchange proxy, NOT Glassnode's
-``spot_money_flow_index``. See CLAUDE.md / README.md.
+``spot_money_flow_index``. See README.md.
+
+Every download is recorded in ``data_cache/MANIFEST.json`` and every cached read is verified against
+it (``src/snapshot.py``), because a re-pull differs from the analysed data (Kraken, below).
 
 Data notes (verified by smoke probe, ccxt 4.5.x):
   * ccxt OHLCV row = ``[ts_ms, open, high, low, close, base_volume]`` (volume in BTC).
@@ -21,6 +24,8 @@ import ccxt
 import pandas as pd
 
 import config
+
+from . import snapshot
 
 MS_DAY = 86_400_000
 _OHLCV_COLS = ["open", "high", "low", "close", "volume"]
@@ -63,6 +68,7 @@ def fetch_venue(ex_id: str, symbol: str, *, force: bool = False) -> pd.DataFrame
     """
     cache = config.DATA_CACHE / f"spot_{ex_id}.parquet"
     if cache.exists() and not force:
+        snapshot.verify(cache)
         return pd.read_parquet(cache)
 
     since_ms = ccxt.Exchange.parse8601(f"{config.WARMUP_START}T00:00:00Z")
@@ -85,6 +91,7 @@ def fetch_venue(ex_id: str, symbol: str, *, force: bool = False) -> pd.DataFrame
     df = df[~df.index.duplicated(keep="last")].astype(float)
     config.DATA_CACHE.mkdir(parents=True, exist_ok=True)
     df.to_parquet(cache)
+    snapshot.record_pull(cache)
     return df
 
 

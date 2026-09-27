@@ -1,7 +1,9 @@
 """Phase 0 — data integrity report + figures.
 
-Loads cached spot/perp data, builds the cross-exchange MFI proxy and the aligned daily
-panel, then writes:
+Loads cached spot/perp data (pulling whatever is missing), builds the cross-exchange MFI proxy
+and the aligned daily panel, then writes:
+  * data_cache/MANIFEST.json                    (sha256/rows/first-last/pull time of every raw
+                                                 file; written by the loaders at pull time)
   * data_cache/panel.parquet                    (the analysis panel for later phases)
   * output/phase0_integrity.md                  (row counts, ranges, gaps, NaNs, coverage)
   * output/figures/phase0_mfi_vs_price.png      (MFI vs perp price, 80/20 bands)
@@ -23,7 +25,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 import config
-from src import data_perp, data_spot, mfi
+from src import data_perp, data_spot, mfi, snapshot
 
 
 def main() -> None:
@@ -131,6 +133,21 @@ def main() -> None:
     W(f"- Cross-exchange vs single-Binance MFI: corr **{corr_proxy_binance:.3f}**, "
       f"mean |diff| **{mad:.2f}** MFI points")
     W(f"- Mean daily funding annualized: **{fund_ann:.2f}%/yr** (>0 ⇒ longs pay)\n")
+
+    W("## Data snapshot\n")
+    manifest = snapshot.load_manifest()
+    if manifest:
+        W("`data_cache/MANIFEST.json` (written by the loaders at pull time; cached reads are verified "
+          "against it):\n")
+        W("| file | rows | first | last | pulled (UTC) | sha256 |")
+        W("|---|---:|---|---|---|---|")
+        for e in manifest["files"]:
+            W(f"| {e['file']} | {e['rows']} | {e['first_ts']} | {e['last_ts']} | "
+              f"{e['pulled_at_utc'] or 'unknown'} | `{e['sha256']}` |")
+        W("")
+    else:
+        W("No `data_cache/MANIFEST.json`: this cache was pulled before the manifest existed; "
+          "`python -m src.snapshot` records it.\n")
 
     W("## Figures\n")
     W("- `figures/phase0_mfi_vs_price.png` — MFI vs perp price (80/20 bands)")

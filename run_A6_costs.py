@@ -52,7 +52,8 @@ def main() -> None:
     fig, ax = plt.subplots(figsize=(9, 5))
     ax.plot(cost_bps, sharpes, marker="o", color="#c02", label=f"best Edge (T={T},W={Wn}) net Sharpe")
     ax.axhline(0, color="k", lw=0.7)
-    ax.axhline(bh_spot, color="#888", ls="--", lw=0.9, label=f"BH spot Sharpe ({bh_spot:.2f})")
+    ax.axhline(bh_spot, color="#888", ls="--", lw=0.9,
+               label=f"B&H perp price ex-funding Sharpe ({bh_spot:.2f})")
     ax.axhline(gross_sharpe, color="#093", ls=":", lw=0.9, label=f"gross (no fees/funding) ({gross_sharpe:.2f})")
     ax.set_xlabel("assumed one-way cost (bps)"); ax.set_ylabel("net Sharpe (full sample)")
     ax.set_title("Variant A — cost sensitivity + breakeven (funding always applied)")
@@ -66,7 +67,8 @@ def main() -> None:
     W("|---:|---:|")
     for c, s in zip(cost_bps, sharpes):
         W(f"| {c} | {s:.3f} |")
-    W(f"\n- Gross Sharpe (no fees/funding): **{gross_sharpe:.3f}**  ·  BH spot: **{bh_spot:.3f}**")
+    W(f"\n- Gross Sharpe (no fees/funding): **{gross_sharpe:.3f}**  ·  B&H perp price ex-funding "
+      f"(full sample): **{bh_spot:.3f}**")
     W(f"- Activity at real costs: **{activity['n_trades']} trades**, avg hold **{activity['avg_hold_days']:.1f} days**, "
       f"turnover **{activity['turnover_per_year']:.1f}/yr**, exposure **{activity['exposure']*100:.0f}%** of days.")
     W(f"- Breakeven one-way cost: **{'%.0f bps' % breakeven if np.isfinite(breakeven) else '> 100 bps (not fee-bound)'}**")

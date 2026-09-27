@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 
 import config
-from src import backtest, divergence as dv, performance as perf, walkforward as wf
+from src import backtest, divergence as dv, gates, performance as perf, walkforward as wf
 
 MODEL = "M1_edge"
 
@@ -90,9 +90,9 @@ def main() -> None:
     ax.plot(oos_idx, (1 + wfr.oos_returns).cumprod(), color="#c02", lw=1.3,
             label=f"Edge WF OOS (Sharpe {wfr.oos_sharpe:.2f})")
     ax.plot(oos_idx, (1 + oo_market.fillna(0)).cumprod(), color="#888", lw=1.0,
-            label=f"BH spot (Sharpe {bh_spot_oos:.2f})")
+            label=f"B&H perp price ex-funding (Sharpe {bh_spot_oos:.2f})")
     ax.set_yscale("log"); ax.set_ylabel("growth of $1 (log)"); ax.legend(fontsize=8)
-    ax.set_title("Variant A — walk-forward OOS equity vs buy-and-hold spot")
+    ax.set_title("Variant A — walk-forward OOS equity vs buy-and-hold (perp price ex-funding)")
     fig.tight_layout(); fig.savefig(config.FIG_DIR / "variantA_oos_equity.png", dpi=120); plt.close(fig)
 
     om = wfr.oos_metrics
@@ -109,8 +109,7 @@ def main() -> None:
     W(f"\n**Aggregated OOS:** net Sharpe **{wfr.oos_sharpe:.3f}** · ann {om.get('ann_return', float('nan'))*100:.1f}% · "
       f"maxDD {om.get('max_drawdown', float('nan'))*100:.1f}% · "
       f"win {om.get('win_rate', float('nan'))*100:.0f}% · PF {om.get('profit_factor', float('nan')):.2f}")
-    W(f"- Benchmark OOS: BH spot Sharpe **{bh_spot_oos:.3f}**, BH perp {bh_perp_oos:.3f} → "
-      f"beats spot? **{'YES' if wfr.oos_sharpe > bh_spot_oos else 'NO'}**\n")
+    W(gates.benchmark_line("variantA", wfr.oos_sharpe, bh_spot_oos, bh_perp_oos) + "\n")
     W("Artifacts: `data_cache/grid_A.parquet`, `data_cache/oos_A.parquet`. Figures: "
       "`variantA_heatmap.png`, `variantA_oos_equity.png`.")
     (config.OUTPUT_DIR / "variantA_phase4.md").write_text("\n".join(L), encoding="utf-8")

@@ -31,6 +31,9 @@ not in the raw count of tests run.
 | Capacity / market-impact modelling | Out of scope at research scale. This is a signal-falsification study, not a live-deployment sizing exercise — capacity only becomes a relevant question once a strategy is confirmed and heading toward real capital, which did not happen in either study (both verdicts are negative). |
 | Full k-fold Combinatorial Purged CV (CPCV) with model refitting per fold | The brief's original "gold standard, optional" note. Approximated here via CSCV/PBO (Phase B2), which reuses the frozen grid's pre-computed daily return series rather than refitting a model per combinatorial fold — appropriate because the signal has no fitted parameters beyond the frozen (threshold, window) grid itself; there is no separate "model" to refit. |
 
+Six robustness checks registered in the pre-registrations were not run and are not choices recorded
+here: they are listed as deviations in `research/ERRATUM_2026-09-27.md` §6.
+
 ## Program-level multiplicity
 
 The two studies form one research family: 2 pre-registered hypotheses, 42 (base M1) + 49 (base M2

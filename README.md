@@ -14,7 +14,8 @@ The factor's honest (non-overlapping) Information Coefficient was statistically 
 zero (p ≈ 0.30–0.46) before any strategy was built. Optimising anyway: the full-sample parameter grid
 (2020-05-11 → 2025-12-31, which contains the whole walk-forward out-of-sample span) peaked at Sharpe
 1.07 on a plateau (not a spike — 3×3 neighbourhood retained 85% of peak Sharpe), but the embargoed
-walk-forward out-of-sample Sharpe collapsed to **0.29**, below buy-and-hold spot (0.46) and below the
+walk-forward out-of-sample Sharpe collapsed to **0.29**, below buy-and-hold (0.31 for the registered
+benchmark, the perp net of funding; 0.46 for the perp's price return ex-funding) and below the
 pre-registered 0.5 floor. 0 of 42 grid configs survived Benjamini–Hochberg FDR correction (full-sample).
 3 of the 7 registered gates passed (plateau, positive out-of-sample equity, cost ceiling); the other 4 —
 including the out-of-sample significance gate — failed (gate table in [output/REPORT.md](output/REPORT.md),
@@ -34,17 +35,20 @@ This closes the one angle the base study left unadjudicated: does perp funding (
 signal, not a price-level one) add information the raw MFI lacked? Phase 1 said no before any PnL was
 computed — the divergence-favourable state (`MFI` percentile-rank high AND funding percentile-rank low)
 occurred on only 2.8% of days, and the resulting Edge signal's honest IC was *weaker* than the raw MFI's.
-Optimised anyway, its walk-forward OOS Sharpe (**0.68**) *beat* buy-and-hold (0.46), sat on a genuine
-plateau, and passed the full-sample DSR (0.96) — the best-looking number in the whole program. It then failed
-both out-of-sample significance gates: a stationary block-bootstrap 95% CI on the OOS Sharpe of
-**[−0.19, 1.62]** includes zero, and a factor-permutation null gives **p = 0.10**. Per-fold OOS Sharpe was
+Optimised anyway, on the same walk-forward windows the base study had already scored, its walk-forward
+OOS Sharpe (**0.68**) *beat* buy-and-hold (0.46, perp price ex-funding), sat on a plateau, and passed
+the full-sample DSR (0.96). It was not the only out-of-sample winner: the base study's M2 robustness
+model also beat buy-and-hold out of sample (0.72) and was never put through the significance tests.
+Variant A then failed both out-of-sample significance gates: a stationary block-bootstrap 95% CI on the
+OOS Sharpe of **[−0.19, 1.62]** includes zero, and a block-permutation null (on gross returns) gives
+**p = 0.10**. Per-fold OOS Sharpe was
 strongly positive in 2021–23 and negative in 2024–25 — the entire apparent edge was built by sitting flat
 through the 2022 crash, not by predicting returns. Verdict: **`INCONCLUSIVE`, leaning `FALSIFIED`**.
 
-![Variant A walk-forward out-of-sample equity curve versus buy-and-hold spot, on a log scale](output/figures/variantA_oos_equity.png)
+![Variant A walk-forward out-of-sample equity curve versus buy-and-hold (perp price, ex-funding; labelled "BH spot" in the figure), on a log scale](output/figures/variantA_oos_equity.png)
 
 *The entire out-of-sample outperformance is built in 2021–23 by sitting flat through the 2022 crash;
-from 2024 the strategy stagnates while buy-and-hold spot rallies to close the gap.*
+from 2024 the strategy stagnates while buy-and-hold rallies to close the gap.*
 
 → [output/REPORT_variantA.md](output/REPORT_variantA.md)
 
@@ -90,7 +94,8 @@ revising it.*
 1. **Factor EDA** — Information Coefficient across horizons/transforms, decile forward-return buckets,
    stationarity. No strategy PnL.
 2. **Pre-registration** — freeze hypothesis, direction, model, and the numeric decision rule from the
-   factor's IC (never from PnL), *before* any optimisation.
+   factor's IC (never from PnL), *before* any optimisation. (Here the IC was computed on the full
+   sample and the ordering is self-attested; see limitations.)
 3. **Signal + backtest** — minimal signal models; a daily engine with fees, slippage, and actual
    historical funding, factor lagged ≥1 bar, executed at the next bar's open.
 4. **Optimisation** — 2D parameter grid, Sharpe heatmap, plateau (anti-spike) test, embargoed (≥14-bar)
@@ -128,6 +133,19 @@ the Edge signal itself (`src/divergence.py`) and its EDA/report scripts. See
   BH-FDR are full-sample statistics too (about 82% of their days are out-of-sample days), so registered
   gates 3 and 4 were scored partly on out-of-sample data. These biases favour the hypotheses, so both
   negative verdicts stand. Details: [research/ERRATUM_2026-09-27.md](research/ERRATUM_2026-09-27.md).
+- **Variant A reused the out-of-sample windows.** It was designed after the base study's out-of-sample
+  results were known and was scored on the same five walk-forward windows, so its 0.68 is a second look
+  at an already-seen path (including the 2022 crash that drives it), not a fresh test.
+- **Benchmarks.** "Buy-and-hold 0.46" (labelled "BH spot" in the committed phase reports and figures)
+  is the perp's open-to-open price return without funding. The base study registered buy-and-hold perp
+  net of funding, 0.313 over the same span; the base strategy's 0.29 is below both. The permutation null
+  runs on gross returns, so its observed Sharpe is not the net figure quoted above.
+- **The pre-registration record is self-attested.** The pre-registrations, code and results were
+  published together in one squashed commit, so git cannot show the ordering. After the results, the
+  base pre-registration's threshold grid was edited from the registered `T ∈ {55..85}` to the executed
+  `{60..90}`, and six registered robustness checks (time-stop and ATR/vol-stop exits, vol-targeting;
+  Variant A's z-score, 2-D conditional and long-short forms) were never run. The amendment in
+  [research/ERRATUM_2026-09-27.md](research/ERRATUM_2026-09-27.md) lists each.
 - **The one real, if non-persistent, effect (drawdown avoidance) is risk management, not alpha.** Variant
   A's entire apparent edge traces to a single crash-avoidance episode (2022) and reversed sign in
   2024–25. It rests on n=1 crash and was deliberately not pursued further as a standalone strategy — see
@@ -141,9 +159,9 @@ src/                data_spot, data_perp, mfi, eda, signals, divergence, backtes
                      performance, stats, pbo
 run_*.py            # phase entry scripts (run_0X = base study, run_AX = Variant A, run_B2 = post-hoc)
 tests/              # pytest — MFI, no-lookahead, embargo (walk-forward) + purge (CSCV), DSR, PBO, etc.
-data_cache/         # raw pulls + intermediate parquet (gitignored; reproducible from the loaders)
+data_cache/         # raw pulls + intermediate parquet + MANIFEST.json (gitignored; see Run)
 output/             # figures + reports (committed — these are the deliverables)
-research/           # PREREGISTRATION*.md (frozen before optimisation)
+research/           # PREREGISTRATION*.md + ERRATUM_2026-09-27.md (corrections and amendment)
 docs/               # DECISION_LOG.md, TEST_RATIONALE.md, AUDIT.md
 ```
 
@@ -183,10 +201,17 @@ python run_01_eda.py
 # ... same order as above
 ```
 
-`run_00_data.py` (and Variant A's funding step inside `run_A1_eda.py`) regenerate `data_cache/` from
-public Binance/Coinbase/Kraken/Bitstamp/OKX endpoints — no API key needed, and it takes roughly a
-minute or two depending on rate limits. Every later script reads from that cache and has no network
-dependency.
+`run_00_data.py` pulls `data_cache/` from public Binance/Coinbase/Kraken/Bitstamp/OKX endpoints (spot,
+perp and funding) — no API key needed, and it takes roughly a minute or two depending on rate limits.
+Every later script reads from that cache and has no network dependency.
+
+**A re-pull will not reproduce the analysed data.** Kraken's API serves only its latest ~720 daily
+candles, so Kraken's coverage (and the MFI proxy from mid-2024 on) depends on the pull date. Every pull
+now records `data_cache/MANIFEST.json` (file, sha256, rows, first/last timestamp, pull time UTC;
+`src/snapshot.py`), and the loaders refuse a cached file that does not match it. The cache behind the
+published results predates the manifest and is not published; its manifest can only be produced from
+that original cache (`python -m src.snapshot --pulled-at …`) and is still pending, so no published
+number can currently be re-derived byte for byte.
 
 ## Tests
 

@@ -13,13 +13,17 @@ despite sitting on a plateau of the full-sample parameter grid. Falsification oc
 
 ---
 
-## 1. Pre-registration (frozen before any PnL) — [research/PREREGISTRATION.md](../research/PREREGISTRATION.md)
+## 1. Pre-registration — [research/PREREGISTRATION.md](../research/PREREGISTRATION.md)
 - **H1 (primary): momentum, LONG-only** — long the perp when smoothed MFI is elevated, flat otherwise.
   Direction chosen from the **IC sign**, not PnL.
 - Model **M1** = MFI level threshold `T` × smoothing window `W` (2 knobs). M2 z-score band = robustness.
 - **CONFIRMED** required ALL of: net OOS Sharpe ≥ 0.5; **beats buy-and-hold**; contiguous plateau;
   DSR > 0.95 + BH-FDR survival; block-bootstrap CI excludes 0 + permutation p < 0.05; positive OOS;
   edge survives realistic cost. Honest prior stated up front: **expect FALSIFIED / INCONCLUSIVE.**
+- The ordering (pre-registration before any PnL) is self-attested: the pre-registration and all results
+  were published in one squashed commit. The threshold grid in the pre-registration was edited after the
+  results, and three registered robustness checks were not run — see the amendment,
+  [research/ERRATUM_2026-09-27.md](../research/ERRATUM_2026-09-27.md) §6.
 
 ## 2. Data integrity (Phase 0) — [phase0_integrity.md](phase0_integrity.md)
 - Panel **2061 daily bars**, 2020-05-11 → 2025-12-31, **0 missing days, 0 NaNs**.
@@ -52,10 +56,13 @@ despite sitting on a plateau of the full-sample parameter grid. Falsification oc
 - **Embargoed** (14-bar) anchored walk-forward, 5 splits: **aggregated OOS Sharpe 0.294**,
   ann +4.4%, maxDD −34%. Per-fold OOS Sharpe swings **−0.30 → +1.26**; selected params are unstable
   (60/2, 70/10, 75/1, 70/10, 70/1).
-- **Benchmark (same OOS span): BH-spot Sharpe 0.457, BH-perp 0.313 — the strategy beats neither.**
-  Figures: `figures/phase4_heatmap_M1.png`, `figures/phase4_oos_equity.png`.
-- M2 (z-score) robustness OOS Sharpe 0.72 is higher, but M1 is the pre-registered primary; switching
-  would be the overfit the pre-registration forbids. Reported as sensitivity only.
+- **Benchmark (same OOS span): buy-and-hold perp net of funding (the registered benchmark) 0.313;
+  perp price ex-funding 0.457 — the strategy beats neither.** Figures: `figures/phase4_heatmap_M1.png`,
+  `figures/phase4_oos_equity.png` (where the price-only series is labelled "BH spot").
+- M2 (z-score) robustness OOS Sharpe 0.717 is higher and beats both buy-and-hold series, but M1 is the
+  pre-registered primary; switching would be the overfit the pre-registration forbids. Reported as
+  sensitivity only — so M2 never went through the Phase-5 bootstrap/permutation tests, and its OOS
+  figure is untested.
 
 ## 5. Statistical validation (Phase 5) — [phase5_validation.md](phase5_validation.md)
 
@@ -97,7 +104,8 @@ DSR/BH-FDR selection control fails (BH-FDR 0/42), and the OOS Sharpe CI includes
 permutation null not significant. The signal is a weak, long-biased
 **momentum tilt whose only realised benefit is drawdown reduction**; it is statistically indistinguishable
 from luck out-of-sample and adds no risk-adjusted value over simply holding BTC. This matches the
-pre-registered honest prior. **No goalposts were moved.**
+pre-registered honest prior. No decision threshold was changed after the results; the deviations from
+the registration are listed in the amendment (§6 of the erratum).
 
 ### Threats to validity (kept honest)
 - **Proxy ≠ Glassnode.** But the proxy is 0.997-corr with Binance-spot MFI and the cross-exchange
@@ -112,6 +120,12 @@ pre-registered honest prior. **No goalposts were moved.**
   (`run_01_eda.py`), 2020-05-11 → 2025-12-31, which contains the entire walk-forward OOS span. The
   bias favours the hypothesis, so the `FALSIFIED` verdict stands. See
   [research/ERRATUM_2026-09-27.md](../research/ERRATUM_2026-09-27.md).
+- **Registered robustness checks not run.** The time-stop and ATR/vol-stop exits and the vol-targeting
+  variant registered in the pre-registration were never run.
+- **The permutation null runs on gross returns** (observed OOS Sharpe 0.445 vs the net 0.294 in the
+  table), so it tests the signal's timing, not the net result.
+- **The analysed data cannot be re-pulled.** Kraken's API serves only its latest ~720 daily candles, and
+  the cache behind these results is not published; see the README's data section.
 
 ## 8. Next steps (if revisited)
 1. **Re-run on the real Glassnode `spot_money_flow_index`** once a key exists; compare to this proxy.
