@@ -41,9 +41,9 @@ the full-sample DSR (0.96). It was not the only out-of-sample winner: the base s
 model also beat buy-and-hold out of sample (0.72) and was never put through the significance tests.
 Variant A then failed both out-of-sample significance gates: a stationary block-bootstrap 95% CI on the
 OOS Sharpe of **[−0.19, 1.62]** includes zero, and a block-permutation null (on gross returns) gives
-**p = 0.10**. Per-fold OOS Sharpe was
-strongly positive in 2021–23 and negative in 2024–25 — the entire apparent edge was built by sitting flat
-through the 2022 crash, not by predicting returns. Verdict: **`INCONCLUSIVE`, leaning `FALSIFIED`**.
+**p = 0.10**. Per-fold OOS Sharpe was strongly positive in 2021–23 and negative in 2024–25 — the entire
+apparent edge was built by sitting flat through the 2022 crash, not by predicting returns. Verdict:
+**`INCONCLUSIVE`, leaning `FALSIFIED`**.
 
 ![Variant A walk-forward out-of-sample equity curve versus buy-and-hold (perp price, ex-funding; labelled "BH spot" in the figure), on a log scale](output/figures/variantA_oos_equity.png)
 
@@ -155,14 +155,15 @@ the Edge signal itself (`src/divergence.py`) and its EDA/report scripts. See
 
 ```
 config.py          # single source of truth (no magic numbers)
-src/                data_spot, data_perp, mfi, eda, signals, divergence, backtest, walkforward,
-                     performance, stats, pbo
+src/                data_spot, data_perp, snapshot, mfi, eda, signals, divergence, backtest,
+                     walkforward, performance, stats, pbo, gates
 run_*.py            # phase entry scripts (run_0X = base study, run_AX = Variant A, run_B2 = post-hoc)
 tests/              # pytest — MFI, no-lookahead, embargo (walk-forward) + purge (CSCV), DSR, PBO, etc.
 data_cache/         # raw pulls + intermediate parquet + MANIFEST.json (gitignored; see Run)
 output/             # figures + reports (committed — these are the deliverables)
 research/           # PREREGISTRATION*.md + ERRATUM_2026-09-27.md (corrections and amendment)
 docs/               # DECISION_LOG.md, TEST_RATIONALE.md, AUDIT.md
+results/            # headline.json — machine-readable headline rows, each stat pinned to its report
 ```
 
 ## Run
@@ -189,6 +190,10 @@ python run_A5_validate.py
 python run_A6_costs.py
 python run_B2_pbo.py        # Post-hoc PBO/CSCV + CPCV (both studies; ~1-2 min, no network)
 ```
+
+`run_06_costs.py` and `run_A6_costs.py` also re-render the registered gate tables in
+`output/REPORT*.md`; `python -m src.gates` does the same from the committed phase reports alone, with
+no data.
 
 Windows (PowerShell):
 ```powershell
@@ -226,12 +231,13 @@ No network access and no `data_cache/` required (the tests use small synthetic f
 committed `output/` reports) — runs in a few seconds. Covers: MFI correctness against hand-worked
 examples, no-lookahead/factor-lag mechanics, signal truncation-invariance, embargo boundary correctness
 (walk-forward) and purge boundary correctness (CSCV), PSR/DSR against known values, the two mandatory
-PBO sanity checks, the descriptive-stats functions, the report generators' labels, and the registered
-gate tables (`src/gates.py` must reproduce the tables in `output/REPORT*.md` from the phase reports).
-See [CLAUDE.md](CLAUDE.md) for the repo's non-negotiables (no fabrication,
-no look-ahead, embargo ≥14 bars on the walk-forward — purge ≥14 bars on the CSCV's combinatorial split
-boundaries, costs always modelled, pre-register before optimising, plateau-not-spike, determinism) and
-how the code enforces each one.
+PBO sanity checks, the descriptive-stats functions, the report generators' labels, the registered
+gate tables (`src/gates.py` must reproduce the tables in `output/REPORT*.md` from the phase reports),
+the data-cache manifest, the hash-pinned statistics helpers (`src/stats.py` against its vendored
+upstream) and `results/headline.json` against the reports it cites. The working rules behind them: no
+look-ahead (factor lagged ≥1 bar, next-open execution, trailing-only transforms), an embargo ≥14 bars
+on the walk-forward and a purge ≥14 bars at the CSCV's combinatorial split boundaries, costs always
+modelled, plateau-not-spike selection, and determinism (seed 7).
 
 ## What I'd do next
 
@@ -243,11 +249,9 @@ anything, it would need to be reframed and benchmarked explicitly as a risk over
 
 ## Related research
 
-Part of a falsification-first research series applying the same protocol across asset classes
-and strategy families:
+Part of a falsification-first research series across asset classes and strategy families; each
+repository states its own verdict, evidence and limitations:
 
-- [`multi-asset-tsmom-research`](https://github.com/AaroNLaU0307/multi-asset-tsmom-research) - time-series momentum across asset classes, **confirmed** (net Sharpe 0.75, 95% bootstrap CI [0.29, 1.23] excludes zero); XSMOM and four overlay studies falsified under the same gates.
-- [`quant-backtest-framework`](https://github.com/AaroNLaU0307/quant-backtest-framework) - multi-instrument SMC price-action study, **falsified** (0/210 cross-instrument BH-FDR across 5 instruments x 42 configs).
-- [`orderflow-research-engine`](https://github.com/AaroNLaU0307/orderflow-research-engine) - order-flow footprint signals on BTC/ETH perps, **falsified/null** (0/20 cells survive BH-FDR; 18-month OOS never opened).
-
-The series' base rate is the point: confirmations are earned against the same gates that falsify everything else.
+- [`multi-asset-tsmom-research`](https://github.com/AaroNLaU0307/multi-asset-tsmom-research) - time-series momentum across asset classes, with cross-sectional momentum and overlay studies.
+- [`quant-backtest-framework`](https://github.com/AaroNLaU0307/quant-backtest-framework) - multi-instrument SMC price-action study.
+- [`orderflow-research-engine`](https://github.com/AaroNLaU0307/orderflow-research-engine) - order-flow footprint signals on BTC/ETH perps.

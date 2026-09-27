@@ -1,19 +1,49 @@
-"""Inference & multiple-testing for the verdict.
+"""Inference & multiple-testing for the verdict: PSR/DSR, BH-FDR, bootstrap CIs, permutation null.
 
-VENDORED (copied + re-tested, not cross-imported) from the sibling repos:
-  * PSR / expected_max_sharpe / DSR  — Bailey & López de Prado (2012, 2014), closed form,
-    from ``multi-asset-tsmom-research/src/xsmom_stats.py`` and ``MTF Analysis/.../robustness/stats.py``.
-  * Benjamini–Hochberg FDR (with q-values).
-  * IID bootstrap Sharpe CI.
+Provenance
+----------
+Vendored (copied, adapted and re-tested here; never cross-imported) from
+``multi-asset-tsmom-research@b8404e7c14234e92da2e13cc7886fd37888176c4`` (both upstream files last
+changed on 2026-06-26, before the copy was made):
 
-NEW here (absent upstream — verified by reading their source):
-  * ``stationary_block_bootstrap_sharpe`` — Politis & Romano (1994) block bootstrap Sharpe CI
-    that respects daily-return autocorrelation.
-  * ``permutation_null_sharpe`` — block-permutation of the signal→return mapping to build a null
-    Sharpe distribution (does the strategy's Sharpe sit outside the luck distribution?).
+    this module                  upstream path :: function
+    sharpe_moments               src/xsmom_stats.py :: _per_period_sharpe_moments
+    probabilistic_sharpe_ratio   src/xsmom_stats.py :: probabilistic_sharpe_ratio
+    expected_max_sharpe          src/xsmom_stats.py :: expected_max_sharpe
+    deflated_sharpe_ratio        src/xsmom_stats.py :: deflated_sharpe_ratio
+    benjamini_hochberg           src/xsmom_stats.py :: benjamini_hochberg
+    bootstrap_sharpe_ci          src/validation.py :: bootstrap_ci
 
-All resampling is deterministic given ``config.RANDOM_SEED``. Sharpe here is PER-PERIOD (daily)
-unless a ``periods_per_year`` annualiser is passed; PSR/DSR operate on the per-period Sharpe.
+None of the six is identical to its upstream; the formulas (Bailey & López de Prado 2012, 2014;
+Benjamini & Hochberg 1995; percentile bootstrap) are the same. Intentional differences:
+  * sharpe_moments: returns NaN moments when n < 2 or sd = 0 (upstream: 0 / 3); skew and kurtosis
+    are scaled by the ddof=0 standard deviation (upstream: ddof=1).
+  * probabilistic_sharpe_ratio, expected_max_sharpe, deflated_sharpe_ratio: take the moments
+    (sr, n, skew, kurt), the trial count and the cross-trial Sharpe variance as arguments instead of
+    return series and a list of trial Sharpes (the same signatures as
+    ``quant-backtest-framework@ad6df24:mtf_smc/robustness/stats.py``, the "MTF Analysis" source in
+    docs/DECISION_LOG.md D0.3; not hashed here). PSR returns NaN when its variance term is <= 0
+    (upstream floors it at 1e-12); DSR returns a float (upstream: a dict with sr_star and psr_vs0).
+  * benjamini_hochberg: returns numpy arrays (upstream: lists), accepts an empty family, and does not
+    echo alpha.
+  * bootstrap_sharpe_ci: Sharpe only, annualised with config.PERIODS_PER_YEAR = 365 (upstream: sqrt(12)
+    on monthly returns); point estimate computed inline.
+
+Written here (no upstream): _stationary_indices, stationary_block_bootstrap_sharpe,
+permutation_null_sharpe.
+
+Conventions: BH-FDR at alpha = 0.05 (the default here; run_05/run_A5 pass config.EDGE_FDR_ALPHA = 0.05).
+CIs are percentile intervals at config.CI_LEVEL = 95% from config.BOOTSTRAP_N = 10,000 resamples:
+iid (bootstrap_sharpe_ci, used by the tests only) or Politis–Romano circular stationary block bootstrap
+with mean block config.STATIONARY_BLOCK_MEAN = 21 days (the Phase-5 OOS Sharpe CI). The permutation null
+block-permutes the position series (block 21) against fixed market returns on gross returns (no costs);
+p = share of null Sharpes >= observed, without a +1 correction. All resampling is seeded with
+config.RANDOM_SEED. Sharpe here is PER-PERIOD (daily) unless a ``periods_per_year`` annualiser is
+passed; PSR/DSR operate on the per-period Sharpe.
+
+tests/test_stats_provenance.py pins the sha256 of every function's normalised source and records the
+upstream hashes: an edit to any function here must update its pinned hash and, if it changes a
+difference listed above, this header.
 """
 from __future__ import annotations
 

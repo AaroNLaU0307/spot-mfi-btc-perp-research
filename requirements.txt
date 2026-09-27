@@ -1,7 +1,7 @@
-# Pinned to the versions this research was run and audited against (Python 3.13).
-# ccxt/requests are only needed to regenerate data_cache/ from public endpoints (run_00_data.py,
-# run_A1_eda.py's funding step) — every other script only reads the cached parquet files and has
-# no network dependency.
+# Python 3.12+ (CI: 3.12 and 3.13; numpy==2.5.0 has no Python 3.11 wheel). Developed on 3.13.
+# Pinned to the versions this research was run and audited against.
+# ccxt/requests are only needed to pull data_cache/ from public endpoints (run_00_data.py) — every
+# other script only reads the cached parquet files and has no network dependency.
 ccxt==4.5.63
 pandas==3.0.3
 numpy==2.5.0

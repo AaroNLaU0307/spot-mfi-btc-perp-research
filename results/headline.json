@@ -1,0 +1,110 @@
+{
+  "schema": "headline/v1",
+  "repo": "AaroNLaU0307/spot-mfi-btc-perp-research",
+  "source_commit": "a90add7198acffe77ab3533ea8134d73d86617fb",
+  "as_of": "2026-09-27",
+  "rows": [
+    {
+      "id": "spot-mfi",
+      "section": "archive",
+      "hypothesis": "Spot-MFI momentum predicts perp returns",
+      "verdict": "FALSIFIED",
+      "verdict_detail": "",
+      "mechanism": "non-overlapping IC ≈ 0 before any strategy (full-sample IC, OOS included); the full-sample grid peak collapsed in the walk-forward to an OOS Sharpe below both buy-and-hold benchmarks",
+      "stats": [
+        {
+          "label": "BH-FDR survivors (M1 grid, full-sample)",
+          "display": "0/42",
+          "value": 0,
+          "artifact": "output/phase5_validation.md",
+          "locator": "line 13: 'Configs surviving BH-FDR at α=0.05: **0/42**'",
+          "provenance": "repo-reported, not reproduced"
+        },
+        {
+          "label": "full-sample peak Sharpe (M1 grid)",
+          "display": "1.07",
+          "value": 1.07,
+          "artifact": "output/phase4_optimize.md",
+          "locator": "line 19: '- Peak full-sample config: **(70, 1)**  Sharpe **1.070**'",
+          "provenance": "repo-reported, not reproduced"
+        },
+        {
+          "label": "walk-forward OOS net Sharpe",
+          "display": "0.29",
+          "value": 0.294,
+          "artifact": "output/phase4_optimize.md",
+          "locator": "line 35: '**Aggregated OOS:** net Sharpe **0.294**'",
+          "provenance": "repo-reported, not reproduced"
+        },
+        {
+          "label": "B&H over the OOS span (perp price ex-funding / registered: perp net of funding)",
+          "display": "0.46 / 0.31",
+          "value": 0.457,
+          "artifact": "output/phase4_optimize.md",
+          "locator": "line 36: '- Benchmark over same OOS span: **BH spot Sharpe 0.457**, BH perp net Sharpe 0.313'",
+          "provenance": "repo-reported, not reproduced"
+        }
+      ],
+      "caveats": [
+        "3 of 7 registered gates pass (plateau, positive OOS equity, cost ceiling); 4 fail.",
+        "1.07 is the full-sample peak of the 42-config grid; about 82% of its days are walk-forward OOS days.",
+        "The Phase-1 IC that set the direction and grid was computed on the full sample, OOS included; the bias favours the hypothesis.",
+        "B&H 0.46 is the perp price return ex-funding; the registered benchmark, B&H perp net of funding, is 0.313.",
+        "BH-FDR family: 42 M1 configs, one-sided PSR p for Sharpe > 0 on full-sample returns; the 49-config M2 grid is outside it.",
+        "Pre-registration ordering is self-attested (squashed history); three registered robustness checks were not run.",
+        "Repo-reported: the data cache is not published and Kraken's ~720-candle window prevents an exact re-pull."
+      ]
+    },
+    {
+      "id": "variant-a",
+      "section": "archive",
+      "hypothesis": "MFI × funding divergence (Variant A)",
+      "verdict": "INCONCLUSIVE, leaning FALSIFIED",
+      "verdict_detail": "",
+      "mechanism": "Edge IC ≈ 0 and weaker than raw MFI; walk-forward OOS Sharpe beat buy-and-hold (perp price ex-funding) on OOS windows reused from the base study, then failed the pre-registered bootstrap-CI and permutation gates (the base study's M2 also beat buy-and-hold OOS and was never tested)",
+      "stats": [
+        {
+          "label": "walk-forward OOS net Sharpe",
+          "display": "0.68",
+          "value": 0.684,
+          "artifact": "output/variantA_phase4.md",
+          "locator": "line 30: '**Aggregated OOS:** net Sharpe **0.684**'",
+          "provenance": "repo-reported, not reproduced"
+        },
+        {
+          "label": "B&H (perp price ex-funding)",
+          "display": "0.46",
+          "value": 0.457,
+          "artifact": "output/variantA_phase4.md",
+          "locator": "line 31: '- Benchmark OOS: BH spot Sharpe **0.457**, BH perp 0.313'",
+          "provenance": "repo-reported, not reproduced"
+        },
+        {
+          "label": "OOS Sharpe 95% block-bootstrap CI",
+          "display": "[−0.19, 1.62]",
+          "value": null,
+          "artifact": "output/variantA_phase5.md",
+          "locator": "line 13: 'Stationary block-bootstrap 95% CI: **[-0.194, 1.619]**'",
+          "provenance": "repo-reported, not reproduced"
+        },
+        {
+          "label": "permutation p (gross returns)",
+          "display": "0.10",
+          "value": 0.1,
+          "artifact": "output/variantA_phase5.md",
+          "locator": "line 14: 'Permutation null: … **p = 0.100**'",
+          "provenance": "repo-reported, not reproduced"
+        }
+      ],
+      "caveats": [
+        "5 of 7 registered gates pass; gates 5 (bootstrap CI) and 6 (permutation) fail.",
+        "Designed after the base study's OOS results were known and scored on the same walk-forward OOS windows.",
+        "The base study's M2 robustness model also beat B&H OOS (0.717) and was never significance-tested.",
+        "The permutation null runs on gross returns (observed 0.768 vs net OOS 0.684).",
+        "The calendar-year stability read (the 2024–25 reversal) is a post-hoc diagnostic, not a registered gate.",
+        "PBO 0.84 (CSCV) is a post-hoc check kept in the repo; it is not a verdict statistic.",
+        "Repo-reported: the data cache is not published and Kraken's ~720-candle window prevents an exact re-pull."
+      ]
+    }
+  ]
+}
