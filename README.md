@@ -41,7 +41,7 @@ the full-sample DSR (0.96). It was not the only out-of-sample winner: the base s
 model also beat buy-and-hold out of sample (0.72) and was never put through the significance tests.
 Variant A then failed both out-of-sample significance gates: a stationary block-bootstrap 95% CI on the
 OOS Sharpe of **[−0.19, 1.62]** includes zero, and a block-permutation null (on gross returns) gives
-**p = 0.10**. Per-fold OOS Sharpe was strongly positive in 2021–23 and negative in 2024–25 — the entire
+**p = 0.10**. A post-hoc per-fold check (not a registered gate) showed OOS Sharpe strongly positive in 2021–23 and negative in 2024–25 — the entire
 apparent edge was built by sitting flat through the 2022 crash, not by predicting returns. Verdict:
 **`INCONCLUSIVE`, leaning `FALSIFIED`**.
 
