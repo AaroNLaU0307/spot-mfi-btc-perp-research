@@ -1,0 +1,61 @@
+{
+  "schema": "data-manifest/v1",
+  "files": [
+    {
+      "file": "perp_funding.parquet",
+      "sha256": "a56eaaba3c950e9651ce85072922521197ab1f3bc2a3fb9e7c35508ccc36fbef",
+      "rows": 6914,
+      "first_ts": "2019-09-10T08:00:00",
+      "last_ts": "2025-12-31T16:00:00.001000",
+      "pulled_at_utc": "2026-06-30T17:28:34+00:00"
+    },
+    {
+      "file": "perp_klines.parquet",
+      "sha256": "7c9bc6d6d756a6f9e7fa54347f0e92873f7b925f0a5d231578c83a3e66592082",
+      "rows": 2307,
+      "first_ts": "2019-09-08T00:00:00",
+      "last_ts": "2025-12-31T00:00:00",
+      "pulled_at_utc": "2026-06-30T17:28:33+00:00"
+    },
+    {
+      "file": "spot_binance.parquet",
+      "sha256": "08c9cb8d2917d818308dbc63fb529aac556e4439670c1e65106fa87e5271fb3b",
+      "rows": 2406,
+      "first_ts": "2019-06-01T00:00:00",
+      "last_ts": "2025-12-31T00:00:00",
+      "pulled_at_utc": "2026-06-30T17:26:53+00:00"
+    },
+    {
+      "file": "spot_bitstamp.parquet",
+      "sha256": "5f6f190fba8cd5acc85a3713dd6d2110b46bb2ec1b4d9aa5a10940b720762a45",
+      "rows": 2406,
+      "first_ts": "2019-06-01T00:00:00",
+      "last_ts": "2025-12-31T00:00:00",
+      "pulled_at_utc": "2026-06-30T17:27:03+00:00"
+    },
+    {
+      "file": "spot_coinbase.parquet",
+      "sha256": "738b78da37824d34122f205657a9c59c304080a2e50e90e96eaa1de181eb999f",
+      "rows": 2406,
+      "first_ts": "2019-06-01T00:00:00",
+      "last_ts": "2025-12-31T00:00:00",
+      "pulled_at_utc": "2026-06-30T17:26:58+00:00"
+    },
+    {
+      "file": "spot_kraken.parquet",
+      "sha256": "e393d433e4709a7322891894c5782d92d17e143699e85471cc009442dcbdce4f",
+      "rows": 540,
+      "first_ts": "2024-07-10T00:00:00",
+      "last_ts": "2025-12-31T00:00:00",
+      "pulled_at_utc": "2026-06-30T17:27:01+00:00"
+    },
+    {
+      "file": "spot_okx.parquet",
+      "sha256": "11bfa66e8824aa78ddc88bad65945d52d4bdb69753c2edc076a1b1e7e1976759",
+      "rows": 2406,
+      "first_ts": "2019-06-01T00:00:00",
+      "last_ts": "2025-12-31T00:00:00",
+      "pulled_at_utc": "2026-06-30T17:27:05+00:00"
+    }
+  ]
+}

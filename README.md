@@ -159,7 +159,7 @@ src/                data_spot, data_perp, snapshot, mfi, eda, signals, divergenc
                      walkforward, performance, stats, pbo, gates
 run_*.py            # phase entry scripts (run_0X = base study, run_AX = Variant A, run_B2 = post-hoc)
 tests/              # pytest — MFI, no-lookahead, embargo (walk-forward) + purge (CSCV), DSR, PBO, etc.
-data_cache/         # raw pulls + intermediate parquet + MANIFEST.json (gitignored; see Run)
+data_cache/         # raw pulls + intermediate parquet (gitignored) + MANIFEST.json (committed; see Run)
 output/             # figures + reports (committed — these are the deliverables)
 research/           # PREREGISTRATION*.md + ERRATUM_2026-09-27.md (corrections and amendment)
 docs/               # DECISION_LOG.md, TEST_RATIONALE.md, AUDIT.md
@@ -213,10 +213,13 @@ Every later script reads from that cache and has no network dependency.
 **A re-pull will not reproduce the analysed data.** Kraken's API serves only its latest ~720 daily
 candles, so Kraken's coverage (and the MFI proxy from mid-2024 on) depends on the pull date. Every pull
 now records `data_cache/MANIFEST.json` (file, sha256, rows, first/last timestamp, pull time UTC;
-`src/snapshot.py`), and the loaders refuse a cached file that does not match it. The cache behind the
-published results predates the manifest and is not published; its manifest can only be produced from
-that original cache (`python -m src.snapshot --pulled-at …`) and is still pending, so no published
-number can currently be re-derived byte for byte.
+`src/snapshot.py`), and the loaders refuse a cached file that does not match it. The committed
+`data_cache/MANIFEST.json` is the manifest of the cache the published results were computed from,
+pulled 2026-06-30 ([`research/ERRATUM_2026-09-27.md`](research/ERRATUM_2026-09-27.md) section 9).
+The raw parquet files stay unpublished, per the data policy in `.gitignore`, so a fresh clone can check
+a cache against the manifest but cannot recreate it. A re-pull differs for Kraken and overwrites that
+file's manifest entry, so `git diff data_cache/MANIFEST.json` shows which files differ from the analysed
+ones.
 
 ## Tests
 

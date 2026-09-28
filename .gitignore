@@ -13,8 +13,10 @@ __pycache__/
 .ipynb_checkpoints/
 
 # Raw / intermediate data — reproducible from the loaders, can be large.
-# Never commit; ship the loader + schema only.
-data_cache/
+# Never commit; ship the loader + schema only. The hash manifest of the
+# analysed cache is committed (research/ERRATUM_2026-09-27.md section 9).
+data_cache/*
+!data_cache/MANIFEST.json
 
 # IDE
 .vscode/
